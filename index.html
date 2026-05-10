@@ -2,517 +2,432 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ailabs Prompt Manager</title>
-    <!-- Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ailabs Access Control</title>
+    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
+    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- PapaParse untuk membaca data dari Google Sheets (CSV) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        tech: ['Rajdhani', 'sans-serif'],
+                    },
+                    colors: {
+                        'glass-dark': 'rgba(15, 23, 42, 0.7)',
+                        'glass-border': 'rgba(255, 255, 255, 0.1)',
+                        'neon-blue': '#00f3ff',
+                    },
+                    backgroundImage: {
+                        'radial-dark': 'radial-gradient(circle at center, #1e1e2f 0%, #0a0a10 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            color: #e2e8f0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        }
-        .glass-input {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: #050505;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 153, 255, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(153, 0, 255, 0.15), transparent 25%);
             color: white;
+            overflow-x: hidden;
+            /* Force desktop-like feel on mobile by preventing pull-to-refresh and strict sizing */
+            overscroll-behavior-y: none;
         }
-        .glass-input:focus {
-            outline: none;
-            border-color: #06b6d4;
-            box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+
+        /* Loading Screen Styles */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background-color: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
         }
-        .neon-text {
-            text-shadow: 0 0 10px rgba(6, 182, 212, 0.8);
+
+        .loader-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        /* Custom Scrollbar untuk tabel */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.02);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(6, 182, 212, 0.5);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(6, 182, 212, 0.8);
-        }
-        /* Animasi Loading */
-        .loader {
-            border: 4px solid rgba(255,255,255,0.1);
-            border-left-color: #06b6d4;
+
+        .loader-logo {
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+            object-fit: cover;
+            z-index: 10;
+            /* Subtle pulse for the logo itself */
+            animation: pulse-logo 2s infinite;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        /* The spinning ring around the logo */
+        .spinner-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #00f3ff;
+            border-right-color: #0055ff;
+            animation: spin 1.5s linear infinite;
+        }
+        
+        .spinner-ring::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-bottom-color: rgba(0, 243, 255, 0.5);
+            border-left-color: rgba(0, 243, 255, 0.5);
+            animation: spin 2s linear infinite reverse;
+        }
+
+        .loading-text {
+            margin-top: 30px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            color: #00f3ff;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+            animation: blink 1.5s infinite;
+        }
+
+        /* Glassmorphism & Glossy effects for Cards */
+        .glass-card {
+            background: linear-gradient(135deg, rgba(25, 30, 45, 0.6) 0%, rgba(10, 15, 25, 0.8) 100%);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Glossy Shine Effect Overlay */
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.05) 40%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0.05) 60%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(45deg);
+            transition: transform 0.6s ease;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .glass-card:hover::before {
+            transform: rotate(45deg) translate(50%, 50%);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--glow-color, rgba(0,255,255,0.3));
+        }
+
+        .card-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Card specific glow colors */
+        .card-bot { --glow-color: rgba(0, 243, 255, 0.4); border-top: 2px solid rgba(0, 243, 255, 0.5); }
+        .card-server { --glow-color: rgba(191, 0, 255, 0.4); border-top: 2px solid rgba(191, 0, 255, 0.5); }
+        .card-prompt { --glow-color: rgba(0, 255, 136, 0.4); border-top: 2px solid rgba(0, 255, 136, 0.5); }
+
+        /* Typography sizing magic to force desktop-like feel on mobile without zooming */
+        /* Use clamp to fluidly adjust text size between a minimum, preferred, and maximum value */
+        .fluid-title {
+            font-size: clamp(18px, 2.5vw, 24px);
+        }
+        .fluid-desc {
+            font-size: clamp(12px, 1.5vw, 15px);
+        }
+        .fluid-header {
+            font-size: clamp(24px, 4vw, 40px);
+        }
+
+        /* iFrame View Styles */
+        #iframe-view {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 50;
+            display: none;
+            flex-direction: column;
+        }
+        #iframe-view.active {
+            display: flex;
+            animation: slideUp 0.4s ease-out;
+        }
+        .iframe-header {
+            height: 60px;
+            background: linear-gradient(to right, rgba(10,15,25,0.9), rgba(0,50,100,0.8));
+            border-bottom: 1px solid rgba(0,243,255,0.3);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        iframe {
+            flex-grow: 1;
+            width: 100%;
+            border: none;
+            background-color: #fff; /* White background for iframes in case they assume it */
+        }
+
+        /* Animations */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes pulse-logo { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.95); opacity: 0.8; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        /* Grid layout tweaks for forcing desktop style on mobile */
+        /* By default grid-cols-1, but we force grid-cols-3 earlier on smaller screens */
+        @media (min-width: 480px) {
+            .custom-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+        }
+        @media (max-width: 479px) {
+             /* On very small phones, we still try to stack them but keep them compact like desktop blocks */
+            .custom-grid { 
+                grid-template-columns: 1fr; 
+                gap: 1.5rem; 
+                padding: 0 10%; /* Squeeze them a bit to look like individual modules */
+            }
         }
     </style>
 </head>
-<body class="p-4 md:p-6">
-    <div class="max-w-7xl mx-auto">
-        
-        <!-- Top Navigation / Ailabs Akses Control -->
-        <nav class="flex flex-col md:flex-row justify-between items-center mb-8 pb-5 border-b border-gray-800 gap-4">
-            <div class="text-xl md:text-2xl font-black text-white tracking-widest uppercase drop-shadow-md">
-                Ailabs <span class="text-cyan-500 neon-text">Akses Control</span>
-            </div>
-            <div class="flex bg-gray-900/50 p-1.5 rounded-xl border border-gray-800 overflow-x-auto w-full md:w-auto">
-                <a href="#" class="px-4 py-2 md:px-5 md:py-2 bg-gray-800 border border-gray-700 text-cyan-400 rounded-lg font-semibold shadow-sm flex items-center gap-2 whitespace-nowrap">
-                    <i class="fa-solid fa-terminal"></i> Prompt Manager
-                </a>
-                <a href="https://ai-labs-both.vercel.app/admin.html" class="px-4 py-2 md:px-5 md:py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap">
-                    <i class="fa-solid fa-robot"></i> Admin Bot Akses
-                </a>
-            </div>
-        </nav>
+<body class="antialiased min-h-screen flex flex-col font-sans selection:bg-neon-blue selection:text-black">
 
-        <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-cyan-400 neon-text"><i class="fa-solid fa-terminal mr-2"></i>Ailabs Prompt Manager</h1>
-                <p class="text-gray-400 text-sm mt-1">Pengganti Spreadsheet: Kelola Database Prompt Kamu di Sini</p>
+    <div id="loading-screen">
+        <div class="loader-container">
+            <div class="spinner-ring"></div>
+            <!-- Logo from user -->
+            <img src="https://i.ibb.co.com/4nFbhTSN/Desain-tanpa-judul-20260428-191052-0000.png" alt="Ailabs Logo" class="loader-logo">
+        </div>
+        <div class="loading-text">Server Ailabs sedang merender...</div>
+    </div>
+
+    <main id="main-content" class="flex-grow flex flex-col opacity-0 transition-opacity duration-1000 ease-in-out relative z-10 px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-7xl mx-auto w-full h-screen sm:h-auto overflow-y-auto sm:justify-center">
+        
+        <!-- Header Section -->
+        <header class="text-center mb-10 sm:mb-16 mt-4 sm:mt-0 flex flex-col items-center">
+            <div class="relative w-24 h-24 sm:w-32 sm:h-32 mb-6 rounded-full p-1 bg-gradient-to-tr from-blue-600 to-cyan-300 shadow-[0_0_30px_rgba(0,243,255,0.4)]">
+                <div class="w-full h-full bg-black rounded-full p-1">
+                    <img src="https://i.ibb.co.com/4nFbhTSN/Desain-tanpa-judul-20260428-191052-0000.png" alt="Ailabs Main Logo" class="w-full h-full object-cover rounded-full">
+                </div>
             </div>
-            <button onclick="openModal()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2.5 rounded-lg font-semibold transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)] flex items-center gap-2">
-                <i class="fa-solid fa-plus"></i> Tambah Prompt Baru
-            </button>
+            <h1 class="fluid-header font-tech font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-blue-400 tracking-wider uppercase drop-shadow-lg">
+                Ailabs Access Control
+            </h1>
+            <p class="mt-3 text-gray-400 max-w-2xl mx-auto fluid-desc">
+                Sistem Manajemen Terpusat. Pilih modul di bawah untuk mengakses panel kontrol masing-masing sistem.
+            </p>
+            <div class="h-1 w-32 bg-gradient-to-r from-transparent via-blue-500 to-transparent mt-6 rounded-full opacity-50"></div>
         </header>
 
-        <!-- Main Content: Spreadsheet Table Alternative -->
-        <div class="glass rounded-2xl overflow-hidden flex flex-col relative min-h-[400px]">
+        <!-- The 3 Column Grid -->
+        <!-- Note: We use custom-grid class defined in CSS to handle the layout responsively but keeping it tight -->
+        <div class="grid custom-grid sm:grid-cols-3 gap-6 sm:gap-8 w-full">
             
-            <!-- Indikator Loading saat mengambil data -->
-            <div id="loading-indicator" class="absolute inset-0 flex flex-col items-center justify-center bg-[#0f172a]/80 z-10 backdrop-blur-sm">
-                <div class="loader mb-4"></div>
-                <p id="loading-text" class="text-cyan-400 animate-pulse font-semibold">Sedang Mengambil Database dari Google Sheets...</p>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-black/40 text-cyan-400 border-b border-gray-700">
-                            <th class="p-4 font-semibold w-16">No</th>
-                            <th class="p-4 font-semibold w-24">Thumbnail</th>
-                            <th class="p-4 font-semibold w-48">Title</th>
-                            <th class="p-4 font-semibold min-w-[300px]">Instruksi Prompt</th>
-                            <th class="p-4 font-semibold w-24 text-center">Likes</th>
-                            <th class="p-4 font-semibold w-48 text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body" class="divide-y divide-gray-800">
-                        <!-- Data Baris Tabel Akan Dirender di Sini -->
-                    </tbody>
-                </table>
-            </div>
-            <!-- Empty State / Error State -->
-            <div id="empty-state" class="hidden p-10 text-center text-gray-500 flex flex-col items-center justify-center">
-                <!-- Konten error akan dimuat dari JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Form Tambah Data -->
-    <div id="addModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-40 hidden opacity-0 transition-opacity duration-300">
-        <div class="glass w-full max-w-lg rounded-2xl p-6 md:p-8 transform scale-95 transition-transform duration-300" id="modalContent">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-cyan-400"><i class="fa-solid fa-file-pen mr-2"></i>Input Data Baru</h2>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-white transition-colors">
-                    <i class="fa-solid fa-xmark text-xl"></i>
-                </button>
-            </div>
-            
-            <div class="mb-4 p-3 bg-amber-500/20 border border-amber-500/50 rounded-lg text-amber-200 text-sm flex gap-2">
-                <i class="fa-solid fa-circle-info mt-0.5"></i>
-                <p>Jika APPS_SCRIPT_URL belum diisi di kode, data hanya tersimpan sementara. <br><strong>Isi URL Script-nya</strong> untuk menyimpan permanen ke Spreadsheet.</p>
-            </div>
-
-            <form id="addForm" onsubmit="saveData(event)">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">Title (Judul Style)</label>
-                        <input type="text" id="inputTitle" required class="w-full glass-input rounded-lg px-4 py-2.5 transition-all" placeholder="Contoh: DARK MODE STYLE">
+            <!-- Card 1: Bot Control -->
+            <button onclick="openLink('https://ai-labs-both.vercel.app/admin.html', 'Bot Control Akses')" class="glass-card card-bot rounded-2xl p-6 sm:p-8 text-left group focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                <div class="card-content flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30 group-hover:bg-cyan-500/40 transition-colors">
+                            <img src="https://i.ibb.co.com/DgtSyw0H/icon-192.png" alt="Icon Modul 1" class="w-7 h-7 object-contain drop-shadow-[0_0_8px_rgba(0,243,255,0.8)] group-hover:scale-110 transition-transform duration-300">
+                        </div>
+                        <span class="text-cyan-400/50 text-xs font-tech tracking-widest uppercase">Modul 01</span>
                     </div>
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">Media URL (Link Gambar)</label>
-                        <input type="url" id="inputMedia" required class="w-full glass-input rounded-lg px-4 py-2.5 transition-all" placeholder="https://i.ibb.co.com/...">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">Instruksi Prompt Lengkap</label>
-                        <textarea id="inputPrompt" required rows="4" class="w-full glass-input rounded-lg px-4 py-2.5 transition-all" placeholder="**Kunci Wajah Aktif**: Wajah subjek HARUS..."></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">Jumlah Likes Awal</label>
-                        <input type="number" id="inputLikes" value="0" min="0" class="w-full glass-input rounded-lg px-4 py-2.5 transition-all">
+                    <h2 class="fluid-title font-bold text-white mb-2 font-tech tracking-wide group-hover:text-cyan-300 transition-colors">Bot Control Akses</h2>
+                    <p class="text-gray-400 fluid-desc mb-6 flex-grow leading-relaxed">
+                        Panel administrasi untuk mengelola pengaturan bot, log interaksi, dan parameter respons AI.
+                    </p>
+                    <div class="flex items-center text-cyan-400 text-sm font-semibold mt-auto group-hover:translate-x-2 transition-transform duration-300">
+                        <span>Akses Panel</span>
+                        <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
                     </div>
                 </div>
-                
-                <div class="mt-8 flex justify-end gap-3">
-                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-lg font-medium text-gray-300 hover:bg-gray-800 transition-colors">Batal</button>
-                    <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2.5 rounded-lg font-medium shadow-[0_0_10px_rgba(6,182,212,0.4)] transition-colors">
-                        Simpan ke Database
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+            </button>
 
-    <!-- Custom Pop-up Alert / Toast -->
-    <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 border-l-4 border-cyan-500 text-white px-6 py-4 rounded shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
-        <i id="toast-icon" class="fa-solid fa-circle-check text-cyan-400 text-xl"></i>
-        <span id="toast-message" class="font-medium">Pesan notifikasi</span>
+            <!-- Card 2: Server Access -->
+            <button onclick="openLink('https://ai-labs-by-pro.vercel.app/admin.html', 'Ailabs Akses Server')" class="glass-card card-server rounded-2xl p-6 sm:p-8 text-left group focus:outline-none focus:ring-2 focus:ring-fuchsia-400">
+                <div class="card-content flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-fuchsia-500/20 flex items-center justify-center border border-fuchsia-500/30 group-hover:bg-fuchsia-500/40 transition-colors">
+                            <img src="https://i.ibb.co.com/DgtSyw0H/icon-192.png" alt="Icon Modul 2" class="w-7 h-7 object-contain drop-shadow-[0_0_8px_rgba(191,0,255,0.8)] group-hover:scale-110 transition-transform duration-300">
+                        </div>
+                        <span class="text-fuchsia-400/50 text-xs font-tech tracking-widest uppercase">Modul 02</span>
+                    </div>
+                    <h2 class="fluid-title font-bold text-white mb-2 font-tech tracking-wide group-hover:text-fuchsia-300 transition-colors">Ailabs Akses Server</h2>
+                    <p class="text-gray-400 fluid-desc mb-6 flex-grow leading-relaxed">
+                        Monitoring infrastruktur, status server pro, load balancing, dan manajemen database utama.
+                    </p>
+                    <div class="flex items-center text-fuchsia-400 text-sm font-semibold mt-auto group-hover:translate-x-2 transition-transform duration-300">
+                        <span>Akses Panel</span>
+                        <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                    </div>
+                </div>
+            </button>
+
+            <!-- Card 3: Prompt Manager -->
+            <button onclick="openLink('https://ailabs-prompt-control.vercel.app/', 'Prompt Control Manager')" class="glass-card card-prompt rounded-2xl p-6 sm:p-8 text-left group focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                <div class="card-content flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 group-hover:bg-emerald-500/40 transition-colors">
+                            <img src="https://i.ibb.co.com/DgtSyw0H/icon-192.png" alt="Icon Modul 3" class="w-7 h-7 object-contain drop-shadow-[0_0_8px_rgba(0,255,136,0.8)] group-hover:scale-110 transition-transform duration-300">
+                        </div>
+                        <span class="text-emerald-400/50 text-xs font-tech tracking-widest uppercase">Modul 03</span>
+                    </div>
+                    <h2 class="fluid-title font-bold text-white mb-2 font-tech tracking-wide group-hover:text-emerald-300 transition-colors">Prompt Control Manager</h2>
+                    <p class="text-gray-400 fluid-desc mb-6 flex-grow leading-relaxed">
+                        Desain, uji coba, dan optimasi prompt instruksi untuk model AI. Manajemen library prompt.
+                    </p>
+                    <div class="flex items-center text-emerald-400 text-sm font-semibold mt-auto group-hover:translate-x-2 transition-transform duration-300">
+                        <span>Akses Panel</span>
+                        <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                    </div>
+                </div>
+            </button>
+
+        </div>
+        
+        <!-- Footer -->
+        <footer class="mt-auto pt-10 pb-6 text-center text-gray-500 text-xs sm:text-sm font-tech">
+            <p>&copy; 2026 Ailabs System Control. All encrypted rights reserved.</p>
+        </footer>
+    </main>
+
+    <!-- This overlay appears when a card is clicked, showing the target site and a back button -->
+    <div id="iframe-view">
+        <div class="iframe-header">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-black flex items-center justify-center border border-gray-700">
+                    <img src="https://i.ibb.co.com/4nFbhTSN/Desain-tanpa-judul-20260428-191052-0000.png" alt="Logo Kecil" class="w-6 h-6 rounded-full">
+                </div>
+                <h2 id="iframe-title" class="text-white font-tech font-bold tracking-wide fluid-desc m-0">Memuat...</h2>
+            </div>
+            <!-- Back Button -->
+            <button onclick="closeIframe()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-4 py-2 rounded flex items-center gap-2 transition-colors font-semibold text-sm">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span class="hidden sm:inline">Kembali ke Menu</span>
+                <span class="sm:hidden">Kembali</span>
+            </button>
+        </div>
+        
+        <!-- Notice if iframe fails to load -->
+        <div id="iframe-fallback" class="hidden absolute inset-0 bg-gray-900 mt-[60px] flex-col items-center justify-center p-6 text-center z-[-1]">
+            <i class="fa-solid fa-triangle-exclamation text-yellow-500 text-4xl mb-4"></i>
+            <h3 class="text-white text-xl font-bold mb-2">Tidak dapat memuat halaman di dalam panel ini</h3>
+            <p class="text-gray-400 mb-6 max-w-md">Beberapa website memblokir tampilan di dalam iframe (X-Frame-Options). Silakan buka tautan ini di tab baru.</p>
+            <a id="fallback-link" href="#" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2">
+                Buka di Tab Baru <i class="fa-solid fa-external-link-alt"></i>
+            </a>
+        </div>
+
+        <iframe id="content-frame" src="" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
     </div>
 
     <script>
-        let dbPrompts = [];
-
-        // === MASUKKAN URL WEB APP GOOGLE APPS SCRIPT KAMU DI SINI ===
-        // Contoh: "https://script.google.com/macros/s/AKfycby.../exec"
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0eDyFffDTeq1J3mgLuiqZkEiOIZ1UZdSZtApb0DeXRdzvtqyq_NQq3eMxB6AHjHuOaA/exec"; 
-
-        // === JALUR UTAMA (Sering diblokir fitur keamanan CORS Browser) ===
-        const primaryUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRh-R-iffxv0HQ1foFA1GCgMJfpvdNp1zDYVaky_cG5zrhF8IBOjpKHB5-KDtaszjiD-YR87BQOwjJA/pub?output=csv";
-        
-        // === JALUR CADANGAN (Proxy AllOrigins untuk membypass CORS Browser) ===
-        const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(primaryUrl);
-
-        function showErrorUI(errorMessage) {
-            const emptyState = document.getElementById('empty-state');
-            emptyState.classList.remove('hidden');
-            emptyState.innerHTML = `
-                <i class="fa-solid fa-shield-halved text-5xl mb-4 text-red-500"></i>
-                <p class="text-xl text-red-400 font-bold mb-2">Browser Memblokir Akses (Isu CORS)</p>
-                <p class="mb-4 text-sm max-w-md mx-auto text-gray-300">Sistem keamanan browser kamu sangat ketat dan memblokir pengambilan data CSV ini. Bahkan jalur proxy cadangan juga ditolak.</p>
-                <div class="text-left bg-gray-800/80 p-5 rounded-xl border border-gray-700 max-w-lg w-full mx-auto overflow-hidden">
-                    <p class="text-cyan-400 text-sm mb-2"><i class="fa-solid fa-bug mr-2"></i>Detail Laporan Error Teknis:</p>
-                    <code class="text-yellow-400 text-xs block bg-black p-3 rounded break-words">${errorMessage}</code>
-                </div>
-            `;
-        }
-
-        // Fungsi memproses dan memasukkan data CSV ke Tabel
-        function processData(dataArray) {
-            dbPrompts = [];
-            dataArray.forEach(item => {
-                // Pencarian kolom fleksibel (mengabaikan huruf besar/kecil & spasi)
-                const getVal = (keysToFind) => {
-                    const foundKey = Object.keys(item).find(k => keysToFind.includes(k.toLowerCase().trim()));
-                    return foundKey ? item[foundKey] : '';
-                };
-
-                const title = getVal(['title', 'judul']);
-                const prompt = getVal(['prompt', 'instruksi prompt', 'instruksi', 'deskripsi']);
-                const mediaUrl = getVal(['mediaurl', 'image', 'gambar', 'url', 'media url']);
-                const likes = getVal(['likes', 'suka', 'like', 'jumlah like']) || '0';
-                const isDeleted = getVal(['delete', 'hapus', 'deleted']);
-                const id = getVal(['id', 'no', 'nomor']) || Date.now().toString() + Math.random().toString(36).substr(2, 5);
-
-                // Lewati baris yang kosong atau tidak ada judulnya
-                if (!title || title.trim() === '') return;
-                
-                // Lewati jika ditandai Delete
-                if (isDeleted && isDeleted.toString().toUpperCase() === 'TRUE') return;
-                
-                dbPrompts.push({ id, title, mediaUrl, prompt, likes });
-            });
-
-            if(dbPrompts.length === 0) {
-                const emptyState = document.getElementById('empty-state');
-                emptyState.classList.remove('hidden');
-                emptyState.innerHTML = `<i class="fa-solid fa-folder-open text-4xl mb-3 text-gray-500"></i><p class="text-gray-400">Database CSV berhasil ditarik, tapi isinya masih kosong atau nama kolom di Spreadsheet kamu tidak sesuai standar (Butuh kolom: title, prompt, mediaUrl).</p>`;
-            } else {
-                document.getElementById('empty-state').classList.add('hidden');
-            }
-
-            renderTable();
-        }
-
-        // === FUNGSI MENGAMBIL DATA DENGAN 2 JALUR (ANTI-BLOKIR) ===
-        function fetchPrompts() {
-            const loadingIndicator = document.getElementById('loading-indicator');
-            const loadingText = document.getElementById('loading-text');
-            loadingIndicator.classList.remove('hidden');
-
-            // 1. Coba fetch langsung pakai jalur utama
-            fetch(primaryUrl)
-                .then(response => {
-                    if (!response.ok) throw new Error("HTTP Error " + response.status);
-                    return response.text();
-                })
-                .then(csvText => {
-                    if (csvText.includes("<!DOCTYPE html>")) throw new Error("Diblokir Google (menerima halaman HTML, bukan data CSV).");
-                    
-                    // Kalau tembus, Parse teks CSV-nya
-                    Papa.parse(csvText, {
-                        header: true,
-                        skipEmptyLines: true,
-                        complete: function(results) {
-                            loadingIndicator.classList.add('hidden');
-                            processData(results.data);
-                        }
-                    });
-                })
-                .catch(err => {
-                    console.warn("Jalur Utama diblokir browser (CORS). Mengaktifkan Jalur Proxy Cadangan...", err);
-                    
-                    // Ganti teks loading
-                    loadingText.innerHTML = `<span class="text-yellow-400">Akses langsung diblokir browser.</span><br>Menggunakan Jalur Proxy Cadangan...`;
-
-                    // 2. Jika jalur utama diblokir browser (CORS), panggil proxy!
-                    fetch(proxyUrl)
-                        .then(resProxy => {
-                            if (!resProxy.ok) throw new Error("Proxy Error " + resProxy.status);
-                            return resProxy.text();
-                        })
-                        .then(csvTextProxy => {
-                            if (csvTextProxy.includes("<!DOCTYPE html>")) throw new Error("Proxy mengembalikan error HTML.");
-                            
-                            Papa.parse(csvTextProxy, {
-                                header: true,
-                                skipEmptyLines: true,
-                                complete: function(results) {
-                                    loadingIndicator.classList.add('hidden');
-                                    processData(results.data);
-                                }
-                            });
-                        })
-                        .catch(proxyErr => {
-                            loadingIndicator.classList.add('hidden');
-                            showErrorUI("Error Jalur 1: " + err.message + " | Error Jalur 2: " + proxyErr.message);
-                        });
-                });
-        }
-
-        // Render Data ke Tabel
-        function renderTable() {
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '';
-
-            if (dbPrompts.length === 0) return;
-
-            dbPrompts.forEach((item, index) => {
-                const safePrompt = item.prompt ? item.prompt.replace(/'/g, "\\'").replace(/"/g, '&quot;') : '';
-                
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-white/5 transition-colors group";
-                tr.innerHTML = `
-                    <td class="p-4 text-gray-400">${index + 1}</td>
-                    <td class="p-4">
-                        <div class="w-16 h-16 rounded overflow-hidden bg-gray-800 border border-gray-700">
-                            <img src="${item.mediaUrl}" onerror="this.src='https://placehold.co/100x100/1e293b/0ea5e9?text=IMG'" class="w-full h-full object-cover">
-                        </div>
-                    </td>
-                    <td class="p-4 font-medium text-white">${item.title}</td>
-                    <td class="p-4">
-                        <div class="text-sm text-gray-300 line-clamp-2" title="${item.prompt}">${item.prompt}</div>
-                    </td>
-                    <td class="p-4 text-center">
-                        <span class="bg-gray-800 text-cyan-400 px-3 py-1 rounded-full text-xs font-bold border border-cyan-900">
-                            <i class="fa-solid fa-heart text-red-500 mr-1"></i> ${item.likes}
-                        </span>
-                    </td>
-                    <td class="p-4 text-center">
-                        <div class="flex items-center justify-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                            <button onclick="copyPrompt('${safePrompt}')" class="bg-blue-600/20 hover:bg-blue-600/50 text-blue-400 w-9 h-9 rounded-lg transition-colors flex items-center justify-center" title="Copy Prompt">
-                                <i class="fa-solid fa-copy"></i>
-                            </button>
-                            <button onclick="deleteData('${item.id}')" class="bg-red-600/20 hover:bg-red-600/50 text-red-400 w-9 h-9 rounded-lg transition-colors flex items-center justify-center" title="Hapus Permanen">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // Fungsi Simpan Data Baru (Ke Google Sheets)
-        async function saveData(e) {
-            e.preventDefault();
+        // Simulate loading time as requested for the rendering screen
+        window.addEventListener('load', () => {
+            const loadingScreen = document.getElementById('loading-screen');
+            const mainContent = document.getElementById('main-content');
             
-            const btnSubmit = e.target.querySelector('button[type="submit"]');
-            const originalText = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Menyimpan...';
-            btnSubmit.disabled = true;
+            // Set a timeout to simulate "rendering" time (2.5 seconds)
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                loadingScreen.style.visibility = 'hidden';
+                
+                // Fade in main content
+                setTimeout(() => {
+                    mainContent.style.opacity = '1';
+                }, 300); // Wait a bit after loading screen starts fading
+                
+            }, 2500);
+        });
 
-            const title = document.getElementById('inputTitle').value;
-            const mediaUrl = document.getElementById('inputMedia').value;
-            const prompt = document.getElementById('inputPrompt').value;
-            const likes = document.getElementById('inputLikes').value;
-            const newId = Date.now().toString();
+        // Function to handle opening links in the internal iFrame view
+        function openLink(url, title) {
+            const iframeView = document.getElementById('iframe-view');
+            const iframe = document.getElementById('content-frame');
+            const titleEl = document.getElementById('iframe-title');
+            const fallback = document.getElementById('iframe-fallback');
+            const fallbackLink = document.getElementById('fallback-link');
             
-            // Tambahan format tanggal sesuai dengan script kamu (createdAt)
-            const createdAt = new Date().toLocaleDateString('id-ID'); 
-
-            const newPromptObj = {
-                id: newId, title: title, mediaUrl: mediaUrl, prompt: prompt, likes: parseInt(likes), createdAt: createdAt
+            // Set title and URL
+            titleEl.textContent = title + " - Akses Aktif";
+            fallbackLink.href = url;
+            
+            // Show the iframe view
+            iframeView.classList.add('active');
+            
+            // Reset state
+            fallback.classList.add('hidden');
+            iframe.style.opacity = '0';
+            
+            // Load the iframe
+            iframe.src = url;
+            
+            // Handle iframe load event
+            iframe.onload = function() {
+                iframe.style.opacity = '1';
+                
+                // Security Note: We cannot easily detect X-Frame-Options blocks via JS 
+                // due to cross-origin restrictions. The iframe will just show browser's error.
+                // However, the user always has the back button in our header to escape.
             };
-
-            // Jika URL API belum diisi, kita fallback ke simpan sementara
-            if (!APPS_SCRIPT_URL) {
-                dbPrompts.unshift(newPromptObj);
-                renderTable();
-                closeModal();
-                showToast('URL API Kosong! Data ditambah sementara.', 'error');
-                document.getElementById('addForm').reset();
-                btnSubmit.innerHTML = originalText;
-                btnSubmit.disabled = false;
-                return;
-            }
-
-            try {
-                // Kirim request (POST) ke Google Sheets menggunakan format JSON sesuai script kamu
-                // Parameter action dikirim melalui URL (?action=insert)
-                const response = await fetch(APPS_SCRIPT_URL + "?action=insert", {
-                    method: 'POST',
-                    headers: {
-                        // Menggunakan text/plain untuk menghindari pemblokiran CORS Preflight dari Google
-                        "Content-Type": "text/plain;charset=utf-8",
-                    },
-                    body: JSON.stringify({
-                        id: newId,
-                        title: title,
-                        mediaUrl: mediaUrl,
-                        prompt: prompt,
-                        likes: parseInt(likes),
-                        createdAt: createdAt
-                    })
-                });
-
-                if (response.ok) {
-                    dbPrompts.unshift(newPromptObj);
-                    renderTable();
-                    closeModal();
-                    showToast('Data BERHASIL ditambahkan ke Spreadsheet!', 'success');
-                    document.getElementById('addForm').reset();
-                } else {
-                    throw new Error("Gagal terhubung ke Google Sheets");
-                }
-            } catch (err) {
-                console.error(err);
-                showToast('Gagal menyimpan secara permanen!', 'error');
-            } finally {
-                btnSubmit.innerHTML = originalText;
-                btnSubmit.disabled = false;
-            }
-        }
-
-        // Fungsi Hapus Data (Dari Google Sheets)
-        window.deleteData = async function(id) {
-            if(!confirm("Yakin ingin menghapus prompt ini secara permanen dari Spreadsheet?")) return;
-
-            if (!APPS_SCRIPT_URL) {
-                dbPrompts = dbPrompts.filter(item => item.id !== id);
-                renderTable();
-                showToast('URL API Kosong! Dihapus sementara dari tabel.', 'error');
-                return;
-            }
-
-            showToast('Menghapus data di Spreadsheet...', 'success');
-
-            try {
-                // Kirim request delete sesuai script kamu dengan parameter ?action=delete
-                const response = await fetch(APPS_SCRIPT_URL + "?action=delete", {
-                    method: 'POST',
-                    headers: {
-                        "Content-Type": "text/plain;charset=utf-8",
-                    },
-                    body: JSON.stringify({
-                        id: id
-                    })
-                });
-
-                if (response.ok) {
-                    dbPrompts = dbPrompts.filter(item => item.id !== id);
-                    renderTable();
-                    showToast('Data BERHASIL dihapus dari Spreadsheet!', 'success');
-                } else {
-                    throw new Error("Gagal menghapus");
-                }
-            } catch (err) {
-                console.error(err);
-                showToast('Gagal menghapus secara permanen!', 'error');
-            }
-        }
-
-        // Fungsi Copy Prompt
-        window.copyPrompt = function(text) {
-            const tempTextArea = document.createElement('textarea');
-            tempTextArea.value = text;
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
-            try {
-                document.execCommand('copy');
-                showToast('Prompt disalin ke clipboard!', 'success');
-            } catch (err) {
-                console.error('Gagal copy text', err);
-            }
-            document.body.removeChild(tempTextArea);
-        }
-
-        // Modal Control
-        const modal = document.getElementById('addModal');
-        const modalContent = document.getElementById('modalContent');
-
-        window.openModal = function() {
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modalContent.classList.remove('scale-95');
-            }, 10);
-        }
-
-        window.closeModal = function() {
-            modal.classList.add('opacity-0');
-            modalContent.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
-
-        // Toast Notification
-        let toastTimeout;
-        function showToast(message, type) {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-            const toastIcon = document.getElementById('toast-icon');
-
-            toastMessage.textContent = message;
             
-            if(type === 'error') {
-                toast.className = "fixed bottom-4 right-4 bg-gray-800 border-l-4 border-red-500 text-white px-6 py-4 rounded shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3";
-                toastIcon.className = "fa-solid fa-trash-can text-red-400 text-xl";
-            } else {
-                toast.className = "fixed bottom-4 right-4 bg-gray-800 border-l-4 border-cyan-500 text-white px-6 py-4 rounded shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3";
-                toastIcon.className = "fa-solid fa-circle-check text-cyan-400 text-xl";
-            }
-
-            toast.classList.remove('translate-y-20', 'opacity-0');
-
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
+            // Provide a small timeout before showing iframe to ensure smooth transition
+            setTimeout(() => {
+                 if(iframe.style.opacity === '0'){
+                     iframe.style.opacity = '1';
+                 }
+            }, 500);
         }
 
-        // Memulai proses
-        fetchPrompts();
+        // Function to close the iFrame and return to grid
+        function closeIframe() {
+            const iframeView = document.getElementById('iframe-view');
+            const iframe = document.getElementById('content-frame');
+            
+            // Hide the view
+            iframeView.classList.remove('active');
+            
+            // Clear the iframe src after animation finishes to stop media/processing
+            setTimeout(() => {
+                iframe.src = '';
+            }, 400);
+        }
     </script>
 </body>
 </html>
