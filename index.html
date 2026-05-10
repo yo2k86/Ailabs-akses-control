@@ -260,7 +260,7 @@
         <div class="grid custom-grid sm:grid-cols-3 gap-6 sm:gap-8 w-full">
             
             <!-- Card 1: Bot Control -->
-            <button onclick="openLink('https://ai-labs-both.vercel.app/admin.html', 'Bot Control Akses')" class="glass-card card-bot rounded-2xl p-6 sm:p-8 text-left group focus:outline-none focus:ring-2 focus:ring-cyan-400">
+            <button onclick="openLink('https://ai-labs-both.vercel.app/', 'Bot Control Akses')" class="glass-card card-bot rounded-2xl p-6 sm:p-8 text-left group focus:outline-none focus:ring-2 focus:ring-cyan-400">
                 <div class="card-content flex flex-col h-full">
                     <div class="flex items-center justify-between mb-4">
                         <div class="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30 group-hover:bg-cyan-500/40 transition-colors">
@@ -327,37 +327,8 @@
         </footer>
     </main>
 
-    <!-- This overlay appears when a card is clicked, showing the target site and a back button -->
-    <div id="iframe-view">
-        <div class="iframe-header">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-black flex items-center justify-center border border-gray-700">
-                    <img src="https://i.ibb.co.com/4nFbhTSN/Desain-tanpa-judul-20260428-191052-0000.png" alt="Logo Kecil" class="w-6 h-6 rounded-full">
-                </div>
-                <h2 id="iframe-title" class="text-white font-tech font-bold tracking-wide fluid-desc m-0">Memuat...</h2>
-            </div>
-            <!-- Back Button -->
-            <button onclick="closeIframe()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-4 py-2 rounded flex items-center gap-2 transition-colors font-semibold text-sm">
-                <i class="fa-solid fa-arrow-left"></i>
-                <span class="hidden sm:inline">Kembali ke Menu</span>
-                <span class="sm:hidden">Kembali</span>
-            </button>
-        </div>
-        
-        <!-- Notice if iframe fails to load -->
-        <div id="iframe-fallback" class="hidden absolute inset-0 bg-gray-900 mt-[60px] flex-col items-center justify-center p-6 text-center z-[-1]">
-            <i class="fa-solid fa-triangle-exclamation text-yellow-500 text-4xl mb-4"></i>
-            <h3 class="text-white text-xl font-bold mb-2">Tidak dapat memuat halaman di dalam panel ini</h3>
-            <p class="text-gray-400 mb-6 max-w-md">Beberapa website memblokir tampilan di dalam iframe (X-Frame-Options). Silakan buka tautan ini di tab baru.</p>
-            <a id="fallback-link" href="#" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2">
-                Buka di Tab Baru <i class="fa-solid fa-external-link-alt"></i>
-            </a>
-        </div>
-
-        <iframe id="content-frame" src="" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
-    </div>
-
     <script>
+        
         // Simulate loading time as requested for the rendering screen
         window.addEventListener('load', () => {
             const loadingScreen = document.getElementById('loading-screen');
@@ -376,57 +347,11 @@
             }, 2500);
         });
 
-        // Function to handle opening links in the internal iFrame view
+        // Function to handle opening links
         function openLink(url, title) {
-            const iframeView = document.getElementById('iframe-view');
-            const iframe = document.getElementById('content-frame');
-            const titleEl = document.getElementById('iframe-title');
-            const fallback = document.getElementById('iframe-fallback');
-            const fallbackLink = document.getElementById('fallback-link');
-            
-            // Set title and URL
-            titleEl.textContent = title + " - Akses Aktif";
-            fallbackLink.href = url;
-            
-            // Show the iframe view
-            iframeView.classList.add('active');
-            
-            // Reset state
-            fallback.classList.add('hidden');
-            iframe.style.opacity = '0';
-            
-            // Load the iframe
-            iframe.src = url;
-            
-            // Handle iframe load event
-            iframe.onload = function() {
-                iframe.style.opacity = '1';
-                
-                // Security Note: We cannot easily detect X-Frame-Options blocks via JS 
-                // due to cross-origin restrictions. The iframe will just show browser's error.
-                // However, the user always has the back button in our header to escape.
-            };
-            
-            // Provide a small timeout before showing iframe to ensure smooth transition
-            setTimeout(() => {
-                 if(iframe.style.opacity === '0'){
-                     iframe.style.opacity = '1';
-                 }
-            }, 500);
-        }
-
-        // Function to close the iFrame and return to grid
-        function closeIframe() {
-            const iframeView = document.getElementById('iframe-view');
-            const iframe = document.getElementById('content-frame');
-            
-            // Hide the view
-            iframeView.classList.remove('active');
-            
-            // Clear the iframe src after animation finishes to stop media/processing
-            setTimeout(() => {
-                iframe.src = '';
-            }, 400);
+            // Karena hosting Vercel memblokir akses jika website ditempel di dalam iFrame (menghasilkan Error 403 Forbidden),
+            // sistem dialihkan menjadi Portal/Launcher yang membuka website di Tab Baru (New Tab) secara langsung.
+            window.open(url, '_blank');
         }
     </script>
 </body>
