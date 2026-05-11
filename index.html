@@ -162,6 +162,7 @@
         .card-bot { --glow-color: rgba(0, 243, 255, 0.4); border-top: 2px solid rgba(0, 243, 255, 0.5); }
         .card-server { --glow-color: rgba(191, 0, 255, 0.4); border-top: 2px solid rgba(191, 0, 255, 0.5); }
         .card-prompt { --glow-color: rgba(0, 255, 136, 0.4); border-top: 2px solid rgba(0, 255, 136, 0.5); }
+        .card-app { --glow-color: rgba(251, 191, 36, 0.4); border-top: 2px solid rgba(251, 191, 36, 0.5); }
 
         /* Typography sizing magic to force desktop-like feel on mobile without zooming */
         /* Use clamp to fluidly adjust text size between a minimum, preferred, and maximum value */
@@ -212,9 +213,12 @@
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
         /* Grid layout tweaks for forcing desktop style on mobile */
-        /* By default grid-cols-1, but we force grid-cols-3 earlier on smaller screens */
-        @media (min-width: 480px) {
-            .custom-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+        /* We adjust to handle 4 items elegantly: 4 cols on desktop, 2 cols on tablet, 1 on mobile */
+        @media (min-width: 1024px) {
+            .custom-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+        }
+        @media (min-width: 480px) and (max-width: 1023px) {
+            .custom-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
         }
         @media (max-width: 479px) {
              /* On very small phones, we still try to stack them but keep them compact like desktop blocks */
@@ -234,7 +238,7 @@
             <!-- Logo from user -->
             <img src="https://i.ibb.co.com/4nFbhTSN/Desain-tanpa-judul-20260428-191052-0000.png" alt="Ailabs Logo" class="loader-logo">
         </div>
-        <div class="loading-text">Server Ailabs sedang merender...</div>
+        <div class="loading-text">Sinkronisasi Database Server...</div>
     </div>
 
     <main id="main-content" class="flex-grow flex flex-col opacity-0 transition-opacity duration-1000 ease-in-out relative z-10 px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-7xl mx-auto w-full h-screen sm:h-auto overflow-y-auto sm:justify-center">
@@ -255,9 +259,9 @@
             <div class="h-1 w-32 bg-gradient-to-r from-transparent via-blue-500 to-transparent mt-6 rounded-full opacity-50"></div>
         </header>
 
-        <!-- The 3 Column Grid -->
+        <!-- The 4 Column Grid -->
         <!-- Note: We use custom-grid class defined in CSS to handle the layout responsively but keeping it tight -->
-        <div class="grid custom-grid sm:grid-cols-3 gap-6 sm:gap-8 w-full">
+        <div class="grid custom-grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 w-full">
             
             <!-- Card 1: Bot Control -->
             <button onclick="openLink('https://ai-labs-both.vercel.app/admin.html', 'Bot Control Akses')" class="glass-card card-bot rounded-2xl p-6 sm:p-8 text-left group focus:outline-none focus:ring-2 focus:ring-cyan-400">
@@ -313,6 +317,26 @@
                         Desain, uji coba, dan optimasi prompt instruksi untuk model AI. Manajemen library prompt.
                     </p>
                     <div class="flex items-center text-emerald-400 text-sm font-semibold mt-auto group-hover:translate-x-2 transition-transform duration-300">
+                        <span>Akses Panel</span>
+                        <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                    </div>
+                </div>
+            </button>
+
+            <!-- Card 4: Application Control -->
+            <button onclick="openLink('https://ai-labs-aplication-control.vercel.app/', 'Application Control')" class="glass-card card-app rounded-2xl p-6 sm:p-8 text-left group focus:outline-none focus:ring-2 focus:ring-amber-400">
+                <div class="card-content flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-amber-500/20 flex items-center justify-center border border-amber-500/30 group-hover:bg-amber-500/40 transition-colors">
+                            <img src="https://i.ibb.co.com/DgtSyw0H/icon-192.png" alt="Icon Modul 4" class="w-7 h-7 object-contain drop-shadow-[0_0_8px_rgba(251,191,36,0.8)] group-hover:scale-110 transition-transform duration-300">
+                        </div>
+                        <span class="text-amber-400/50 text-xs font-tech tracking-widest uppercase">Modul 04</span>
+                    </div>
+                    <h2 class="fluid-title font-bold text-white mb-2 font-tech tracking-wide group-hover:text-amber-300 transition-colors">Application Control</h2>
+                    <p class="text-gray-400 fluid-desc mb-6 flex-grow leading-relaxed">
+                        Manajemen terpusat untuk konfigurasi aplikasi, deployment sistem, dan integrasi layanan pihak ketiga.
+                    </p>
+                    <div class="flex items-center text-amber-400 text-sm font-semibold mt-auto group-hover:translate-x-2 transition-transform duration-300">
                         <span>Akses Panel</span>
                         <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
                     </div>
