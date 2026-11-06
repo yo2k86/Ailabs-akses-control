@@ -1,11 +1,11 @@
-const CACHE_NAME = 'ailabs-pwa-v1';
+const CACHE_NAME = 'ailabs-pwa-v2';
 const urlsToCache = [
   '/',
   '/index.html'
 ];
 
 // Install Service Worker dan simpan cache
-self.addEventListener('install', event => {
+self.addEventListener('install', event => { self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -17,7 +17,7 @@ self.addEventListener('install', event => {
 
 // Intercept request jaringan (berguna agar web bisa dibuka offline)
 self.addEventListener('fetch', event => {
-  event.respondWith(
+  const isPage = event.request.mode === 'navigate' || event.request.url.endsWith('/') || event.request.url.endsWith('/index.html'); if (isPage) { event.respondWith(fetch(event.request).then(response => { if (response && response.ok) { const copy = response.clone(); caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy)); } return response; }).catch(() => caches.match(event.request))); return; } event.respondWith(
     caches.match(event.request)
       .then(response => {
         // Jika ada di cache, kembalikan dari cache
@@ -31,7 +31,7 @@ self.addEventListener('fetch', event => {
 });
 
 // Update Service worker jika ada perubahan versi
-self.addEventListener('activate', event => {
+self.addEventListener('activate', event => { self.clients.claim();
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then(cacheNames => {
