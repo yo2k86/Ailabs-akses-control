@@ -168,7 +168,7 @@
         .card-bot { --glow-color: rgba(0, 243, 255, 0.4); border-top: 2px solid rgba(0, 243, 255, 0.5); }
         .card-server { --glow-color: rgba(191, 0, 255, 0.4); border-top: 2px solid rgba(191, 0, 255, 0.5); }
         .card-prompt { --glow-color: rgba(0, 255, 136, 0.4); border-top: 2px solid rgba(0, 255, 136, 0.5); }
-        .card-app { --glow-color: rgba(251, 191, 36, 0.4); border-top: 2px solid rgba(251, 191, 36, 0.5); }
+        .card-app { --glow-color: rgba(251, 191, 36, 0.4); border-top: 2px solid rgba(251, 191, 36, 0.5); } .card-manager { --glow-color: rgba(244, 63, 94, 0.4); border-top: 2px solid rgba(244, 63, 94, 0.5); }
 
         /* Typography sizing magic to force desktop-like feel on mobile without zooming */
         /* Use clamp to fluidly adjust text size between a minimum, preferred, and maximum value */
@@ -219,9 +219,9 @@
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
         /* Grid layout tweaks for forcing desktop style on mobile */
-        /* We adjust to handle 4 items elegantly: 4 cols on desktop, 2 cols on tablet, 1 on mobile */
+        /* We adjust to handle 5 items elegantly: 5 cols on desktop, 2 cols on tablet, 1 on mobile */
         @media (min-width: 1024px) {
-            .custom-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+            .custom-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1rem; }
         }
         @media (min-width: 480px) and (max-width: 1023px) {
             .custom-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
@@ -265,9 +265,9 @@
             <div class="h-1 w-32 bg-gradient-to-r from-transparent via-blue-500 to-transparent mt-6 rounded-full opacity-50"></div>
         </header>
 
-        <!-- The 4 Column Grid -->
+        <!-- The 5 Column Grid -->
         <!-- Note: We use custom-grid class defined in CSS to handle the layout responsively but keeping it tight -->
-        <div class="grid custom-grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 w-full">
+        <div class="grid custom-grid sm:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8 w-full">
             
             <!-- Card 1: Bot Control -->
             <button onclick="openLink('https://ai-labs-both.vercel.app/admin.html', 'Bot Control Akses')" class="glass-card card-bot rounded-2xl p-6 sm:p-8 text-left group focus:outline-none focus:ring-2 focus:ring-cyan-400">
@@ -347,11 +347,7 @@
                         <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
                     </div>
                 </div>
-            </button>
-
-        </div>
-        
-        <!-- Footer -->
+            </button> <!-- Card 5: App Manager -->            <button onclick="openLink('https://ailabs-app-manager.vercel.app/', 'App Manager')" class="glass-card card-manager rounded-2xl p-6 sm:p-8 text-left group focus:outline-none focus:ring-2 focus:ring-rose-400"> <div class="card-content flex flex-col h-full"> <div class="flex items-center justify-between mb-4"> <div class="w-12 h-12 rounded-lg bg-rose-500/20 flex items-center justify-center border border-rose-500/30 group-hover:bg-rose-500/40 transition-colors"> <img src="https://i.ibb.co.com/DgtSyw0H/icon-192.png" alt="Icon Modul 5" class="w-7 h-7 object-contain drop-shadow-[0_0_8px_rgba(244,63,94,0.8)] group-hover:scale-110 transition-transform duration-300"> </div> <span class="text-rose-400/50 text-xs font-tech tracking-widest uppercase">Modul 05</span> </div> <h2 class="fluid-title font-bold text-white mb-2 font-tech tracking-wide group-hover:text-rose-300 transition-colors">App Manager</h2> <p class="text-gray-400 fluid-desc mb-6 flex-grow leading-relaxed">Kelola daftar aplikasi workspace — tambah, edit, publish, dan hapus aplikasi dari satu panel.</p> <div class="flex items-center text-rose-400 text-sm font-semibold mt-auto group-hover:translate-x-2 transition-transform duration-300"> <span>Akses Panel</span> <i class="fa-solid fa-arrow-right ml-2 text-xs"></i> </div> </div> </button> </div> <!-- Footer -->
         <footer class="mt-auto pt-10 pb-6 text-center text-gray-500 text-xs sm:text-sm font-tech">
             <p>&copy; 2026 Ailabs System Control. All encrypted rights reserved.</p>
         </footer>
